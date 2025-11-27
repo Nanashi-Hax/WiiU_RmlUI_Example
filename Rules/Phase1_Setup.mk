@@ -10,3 +10,4 @@ include $(DEVKITPRO)/wups/share/wups_rules
 
 WUT_ROOT := $(DEVKITPRO)/wut
 WUMS_ROOT := $(DEVKITPRO)/wums
+PORTLIBS := $(DEVKITPRO)/portlibs/ppc

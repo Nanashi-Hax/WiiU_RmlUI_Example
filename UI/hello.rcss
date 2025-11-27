@@ -1,24 +1,41 @@
+/* 画面全体 */
 body {
-	font-family: Lato;
-	font-size: 20dp;
-	color: white;
-	background: rgba(51, 51, 51, 0.8); /* Semi-transparent background */
-	text-align: center;
-	padding: 2em;
-    width: auto; /* Don't fill entire screen */
-    height: auto; /* Don't fill entire screen */
+    font-family: Lato;
+    font-size: 20dp;
+    color: white;
+    background: rgba(51, 51, 51, 0.8); /* 半透明背景 */
+    margin: 0;
+    padding: 0;
 }
 
+/* コンテナを画面中央に配置 */
+#container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+/* 見出し */
 h1 {
-	font-size: 2em;
-	color: #f4a460;
+    font-size: 2em;
+    color: #f4a460;
+    margin-bottom: 0.5em;
 }
 
+/* ボタン */
 button {
     display: inline-block;
     padding: 10dp 20dp;
     background-color: #555;
-    border: 2dp #999;
+
+    border-width: 2dp;
+    border-style: solid;
+    border-color: #999;
+
+    cursor: pointer;
+    margin-top: 1em;
 }
 
 button:hover {

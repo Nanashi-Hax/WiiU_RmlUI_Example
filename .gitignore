@@ -1,4 +1,6 @@
 .vscode/
-RmlUI_Example.*
+*.wps
+*.elf
+*.lst
 Build/
 Shader/Build/

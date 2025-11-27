@@ -6,7 +6,7 @@
 CFLAGS	:=	-Wall -O3 -ffunction-sections \
 			$(MACHDEP)
 
-CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__ -D__WUPS__
+CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__ -D__WUPS__ -I$(PORTLIBS)/include/freetype2 -DRMLUI_FONT_ENGINE_FREETYPE
 
 CXXFLAGS	:= $(CFLAGS) -std=c++23
 
@@ -23,7 +23,7 @@ CXXFLAGS += -DDEBUG -DVERBOSE_DEBUG -g
 CFLAGS += -DDEBUG -DVERBOSE_DEBUG -g
 endif
 
-LIBS	:= -lwups -lwut -lnotifications -lmappedmemory -lkernel -lrmlui
+LIBS	:= -lwups -lwut -lnotifications -lmappedmemory -lkernel -lrmlui -lfreetype
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level

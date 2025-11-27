@@ -1,11 +1,13 @@
 <rml>
-	<head>
-		<title>Hello World</title>
-		<link type="text/rcss" href="hello.rcss"/>
-	</head>
-	<body>
-		<h1>Hello Wii U!</h1>
-		<p>This is a sample RmlUi document running on the Wii U.</p>
-        <button>Click Me!</button>
-	</body>
+    <head>
+        <title>Hello World</title>
+        <link type="text/rcss" href="hello.rcss"/>
+    </head>
+    <body>
+        <div id="container">
+            <h1>Hello Wii U!</h1>
+            <p>This is a sample RmlUi document running on the Wii U.</p>
+            <button>Click Me!</button>
+        </div>
+    </body>
 </rml>

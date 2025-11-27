@@ -242,6 +242,9 @@ Rml::TextureHandle RenderInterface_GX2::GenerateTexture(
 	std::memset(tex, 0, sizeof(GX2Texture));
 	tex_data->texture = tex;
 	
+    // Determine format based on input size
+    int bytes_per_pixel = source.size() / (source_dimensions.x * source_dimensions.y);
+    
 	tex->surface.dim = GX2_SURFACE_DIM_TEXTURE_2D;
 	tex->surface.use = GX2_SURFACE_USE_TEXTURE;
 	tex->surface.width = source_dimensions.x;
@@ -272,11 +275,32 @@ Rml::TextureHandle RenderInterface_GX2::GenerateTexture(
 	unsigned char* dst_pixels = (unsigned char*)tex->surface.image;
 	const unsigned char* src_pixels = (const unsigned char*)source.data();
 	
-	for (int y = 0; y < source_dimensions.y; y++) {
-		std::memcpy(dst_pixels + (y * tex->surface.pitch * 4), 
-		           src_pixels + (y * source_dimensions.x * 4), 
-		           source_dimensions.x * 4);
-	}
+    if (bytes_per_pixel == 4) {
+        // RGBA8 input
+        for (int y = 0; y < source_dimensions.y; y++) {
+            std::memcpy(dst_pixels + (y * tex->surface.pitch * 4), 
+                       src_pixels + (y * source_dimensions.x * 4), 
+                       source_dimensions.x * 4);
+        }
+    } else if (bytes_per_pixel == 1) {
+        // A8 input (font) - Expand to RGBA8 (White + Alpha)
+        for (int y = 0; y < source_dimensions.y; y++) {
+            unsigned char* row_dst = dst_pixels + (y * tex->surface.pitch * 4);
+            const unsigned char* row_src = src_pixels + (y * source_dimensions.x);
+            
+            for (int x = 0; x < source_dimensions.x; x++) {
+                unsigned char alpha = row_src[x];
+                row_dst[x * 4 + 0] = 255; // R
+                row_dst[x * 4 + 1] = 255; // G
+                row_dst[x * 4 + 2] = 255; // B
+                row_dst[x * 4 + 3] = alpha; // A
+            }
+        }
+    } else {
+        WHBLogPrintf("GenerateTexture: Unsupported bytes per pixel: %d", bytes_per_pixel);
+        // Fill with magenta to indicate error
+        // ...
+    }
 	
 	// Flush CPU cache to GPU
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, dst_pixels, tex->surface.imageSize);
@@ -343,3 +367,10 @@ void RenderInterface_GX2::SetTransform(const Rml::Matrix4f* transform) {
 	//     // Use identity matrix
 	// }
 }
+
+RenderInterface_GX2::TextureData* RenderInterface_GX2::GetTextureData(Rml::TextureHandle texture_handle) {
+	if (!texture_handle)
+		return nullptr;
+	return reinterpret_cast<TextureData*>(texture_handle);
+}
+

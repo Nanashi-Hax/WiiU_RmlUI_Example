@@ -11,7 +11,6 @@
 #include <RmlUi/Core.h>
 #include "RmlUi_Backend.h"
 #include "RmlUi_File_WiiU.h"
-#include "RmlUi_FontEngine_Dummy.h"
 
 WUPS_PLUGIN_NAME("RmlUI Example");
 WUPS_PLUGIN_DESCRIPTION("Overlay Plugin");
@@ -60,9 +59,7 @@ ON_APPLICATION_START()
 
     // Set RmlUi interfaces
     static FileInterface_WiiU file_interface;
-    static FontEngineInterface_Dummy font_interface;
     Rml::SetFileInterface(&file_interface);
-    Rml::SetFontEngineInterface(&font_interface);
     Rml::SetSystemInterface(Backend::GetSystemInterface());
     Rml::SetRenderInterface(Backend::GetRenderInterface());
 
@@ -78,8 +75,13 @@ ON_APPLICATION_START()
         return;
     }
 
-    // Load fonts (optional, using default if none)
-    // Rml::LoadFontFace("fs:/vol/content/fonts/Lato-Regular.ttf");
+    // Load fonts
+    // You need to put a font file at this path!
+    if (!Rml::LoadFontFace("fs:/vol/external01/wiiu/plugins/RmlUI/fonts/Lato-Regular.ttf")) {
+        WHBLogPrintf("Failed to load font: fs:/vol/external01/wiiu/plugins/RmlUI/fonts/Lato-Regular.ttf");
+    } else {
+        WHBLogPrintf("Font loaded successfully");
+    }
 
     // Load the Hello World document
     // Using absolute path on SD card for safety

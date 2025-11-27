@@ -15,6 +15,14 @@
 
 class RenderInterface_GX2 : public Rml::RenderInterface {
 public:
+	// Texture data structure
+	struct TextureData {
+		GX2Texture* texture;
+		GX2Sampler* sampler;
+		
+		TextureData() : texture(nullptr), sampler(nullptr) {}
+	};
+
 	RenderInterface_GX2();
 	~RenderInterface_GX2();
 
@@ -46,6 +54,9 @@ public:
 
 	void SetTransform(const Rml::Matrix4f* transform) override;
 
+	// Helper method for font engine to get texture data
+	TextureData* GetTextureData(Rml::TextureHandle texture_handle);
+
 private:
 	// Geometry data structure matching RmlUi::Vertex layout
 	struct GeometryData {
@@ -56,14 +67,6 @@ private:
 		
 		GeometryData() : vertex_buffer(nullptr), index_buffer(nullptr), 
 		                 num_vertices(0), num_indices(0) {}
-	};
-
-	// Texture data structure
-	struct TextureData {
-		GX2Texture* texture;
-		GX2Sampler* sampler;
-		
-		TextureData() : texture(nullptr), sampler(nullptr) {}
 	};
 
 	int viewport_width = 1280;
