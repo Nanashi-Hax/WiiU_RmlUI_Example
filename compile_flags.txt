@@ -1,0 +1,16 @@
+--target=powerpc-eabi
+
+-xc++
+-Wall
+-Wno-deprecated-builtins
+-std=c++23
+
+-IPlugin/Include
+
+-ID:/devkitPro/wut/include
+-ID:/devkitPro/wut/usr/include
+-ID:/devkitPro/wups/include
+-ID:/devkitPro/wums/include
+-ID:/devkitPro/devkitPPC/powerpc-eabi/include/c++/15.1.0
+-ID:/devkitPro/devkitPPC/powerpc-eabi/include/c++/15.1.0/powerpc-eabi
+-ID:/devkitPro/devkitPPC/powerpc-eabi/include

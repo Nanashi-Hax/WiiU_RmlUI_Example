@@ -1,0 +1,4 @@
+.vscode/
+ImGui_Example.*
+Build/
+Shader/Build/
