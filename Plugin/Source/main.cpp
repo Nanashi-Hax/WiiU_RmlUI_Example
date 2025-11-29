@@ -83,9 +83,9 @@ ON_APPLICATION_START()
         WHBLogPrintf("Font loaded successfully");
     }
 
-    // Load the Hello World document
+    // Load the Demo document
     // Using absolute path on SD card for safety
-    const char* docPath = "fs:/vol/external01/wiiu/plugins/RmlUI/hello.rml";
+    const char* docPath = "fs:/vol/external01/wiiu/plugins/RmlUI/demo.rml";
     WHBLogPrintf("Loading document from: %s", docPath);
     
     Rml::ElementDocument* document = g_RmlContext->LoadDocument(docPath);

@@ -152,13 +152,7 @@ Rml::CompiledGeometryHandle RenderInterface_GX2::CompileGeometry(
 {
 	GeometryData* geometry = new GeometryData();
 
-    if (!vertices.empty()) {
-        const Rml::Vertex& v = vertices[0];
-        /*WHBLogPrintf("CompileGeometry: V0 Pos(%.2f, %.2f) Color(%d,%d,%d,%d) UV(%.2f, %.2f)",
-            v.position.x, v.position.y,
-            v.colour.red, v.colour.green, v.colour.blue, v.colour.alpha,
-            v.tex_coord.x, v.tex_coord.y);*/
-    }
+
 	
 	// Allocate GX2 vertex buffer
 	uint32_t vtx_buffer_size = vertices.size() * sizeof(Rml::Vertex);
@@ -216,7 +210,7 @@ void RenderInterface_GX2::RenderGeometry(
     // Combine translation and transform into a single matrix
     if (shader_group) {
         // Ensure we have a buffer for this draw call
-        if (current_transform_buffer_index >= transform_buffer.size()) {
+        if ((size_t)current_transform_buffer_index >= transform_buffer.size()) {
             GX2RBuffer new_buffer = {};
             GX2InitUniformBuffer(&new_buffer, sizeof(float) * 16, 1);
             transform_buffer.push_back(new_buffer);
@@ -268,14 +262,118 @@ Rml::TextureHandle RenderInterface_GX2::LoadTexture(
 	Rml::Vector2i& texture_dimensions, 
 	const Rml::String& source) 
 {
-	// TODO: Implement texture loading from file
-	// 1. Load image file (use stb_image or similar)
-	// 2. Convert to RGBA8
-	// 3. Call GenerateTexture
+	Rml::FileInterface* file_interface = Rml::GetFileInterface();
+	Rml::FileHandle file_handle = file_interface->Open(source);
+	if (!file_handle) {
+		return 0;
+	}
+
+	file_interface->Seek(file_handle, 0, SEEK_END);
+	size_t file_size = file_interface->Tell(file_handle);
+	file_interface->Seek(file_handle, 0, SEEK_SET);
+
+	if (file_size < 18) {
+		file_interface->Close(file_handle);
+		return 0;
+	}
+
+	Rml::byte* buffer = new Rml::byte[file_size];
+	file_interface->Read(buffer, file_size, file_handle);
+	file_interface->Close(file_handle);
+
+	// TGA Header
+	// 0: ID length
+	// 1: Color map type
+	// 2: Image type (2 = uncompressed RGB)
+	// 12: Width (lo)
+	// 13: Width (hi)
+	// 14: Height (lo)
+	// 15: Height (hi)
+	// 16: Pixel depth (24 or 32)
+	// 17: Image descriptor
+
+	Rml::byte id_length = buffer[0];
+	Rml::byte color_map_type = buffer[1];
+	Rml::byte image_type = buffer[2];
 	
-	texture_dimensions.x = 0;
-	texture_dimensions.y = 0;
-	return 0;
+	if (image_type != 2 && image_type != 3) { // Only support uncompressed RGB/RGBA or Grayscale
+		delete[] buffer;
+		return 0;
+	}
+
+	int width = buffer[12] | (buffer[13] << 8);
+	int height = buffer[14] | (buffer[15] << 8);
+	int pixel_depth = buffer[16];
+	int image_descriptor = buffer[17];
+
+	if (width <= 0 || height <= 0 || (pixel_depth != 24 && pixel_depth != 32 && pixel_depth != 8)) {
+		delete[] buffer;
+		return 0;
+	}
+
+	int bytes_per_pixel = pixel_depth / 8;
+	size_t image_data_offset = 18 + id_length;
+	
+	// Skip color map if present (though type 2 shouldn't have one usually, but spec says check)
+	if (color_map_type == 1) {
+		int color_map_len = buffer[5] | (buffer[6] << 8);
+		int color_map_entry_size = buffer[7];
+		image_data_offset += color_map_len * (color_map_entry_size / 8);
+	}
+
+	if (image_data_offset + width * height * bytes_per_pixel > file_size) {
+		delete[] buffer;
+		return 0;
+	}
+
+	Rml::byte* image_data = buffer + image_data_offset;
+	
+	// Convert to RGBA8
+	int dest_bytes_per_pixel = 4;
+	Rml::byte* dest_buffer = new Rml::byte[width * height * dest_bytes_per_pixel];
+
+	bool flip_vertical = !(image_descriptor & 0x20); // Bit 5 set = top-to-bottom
+
+	for (int y = 0; y < height; y++) {
+		int src_y = flip_vertical ? (height - 1 - y) : y;
+		Rml::byte* src_row = image_data + (src_y * width * bytes_per_pixel);
+		Rml::byte* dest_row = dest_buffer + (y * width * dest_bytes_per_pixel);
+
+		for (int x = 0; x < width; x++) {
+			Rml::byte* src_pixel = src_row + (x * bytes_per_pixel);
+			Rml::byte* dest_pixel = dest_row + (x * dest_bytes_per_pixel);
+
+			if (bytes_per_pixel == 3) {
+				// BGR -> RGBA
+				dest_pixel[0] = src_pixel[2]; // R
+				dest_pixel[1] = src_pixel[1]; // G
+				dest_pixel[2] = src_pixel[0]; // B
+				dest_pixel[3] = 255;          // A
+			} else if (bytes_per_pixel == 4) {
+				// BGRA -> RGBA
+				dest_pixel[0] = src_pixel[2]; // R
+				dest_pixel[1] = src_pixel[1]; // G
+				dest_pixel[2] = src_pixel[0]; // B
+				dest_pixel[3] = src_pixel[3]; // A
+			} else if (bytes_per_pixel == 1) {
+				// Grayscale -> RGBA
+				dest_pixel[0] = src_pixel[0];
+				dest_pixel[1] = src_pixel[0];
+				dest_pixel[2] = src_pixel[0];
+				dest_pixel[3] = 255;
+			}
+		}
+	}
+
+	texture_dimensions.x = width;
+	texture_dimensions.y = height;
+
+	Rml::TextureHandle handle = GenerateTexture(Rml::Span<const Rml::byte>(dest_buffer, width * height * 4), texture_dimensions);
+
+	delete[] dest_buffer;
+	delete[] buffer;
+
+	return handle;
 }
 
 Rml::TextureHandle RenderInterface_GX2::GenerateTexture(
@@ -304,8 +402,8 @@ Rml::TextureHandle RenderInterface_GX2::GenerateTexture(
 	tex->viewNumSlices = 1;
 	tex->viewNumMips = 1;
 	
-	// IMPORTANT: Swizzle for big-endian (ABGR -> RGBA)
-	tex->compMap = GX2_COMP_MAP(GX2_SQ_SEL_A, GX2_SQ_SEL_B, GX2_SQ_SEL_G, GX2_SQ_SEL_R);
+	// Standard RGBA mapping
+	tex->compMap = GX2_COMP_MAP(GX2_SQ_SEL_R, GX2_SQ_SEL_G, GX2_SQ_SEL_B, GX2_SQ_SEL_A);
 	
 	GX2CalcSurfaceSizeAndAlignment(&tex->surface);
 	GX2InitTextureRegs(tex);
