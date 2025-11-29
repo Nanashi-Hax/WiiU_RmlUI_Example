@@ -74,6 +74,10 @@ private:
 	bool scissor_enabled = false;
 	bool transform_enabled = false;
     GX2RBuffer projection_buffer = {};
+    Rml::Vector<GX2RBuffer> transform_buffer = {};
+    int current_transform_buffer_index = 0;
+    
+    Rml::Matrix4f transform_matrix = Rml::Matrix4f::Identity();
 
 	// Shader group for rendering (similar to ImGui implementation)
 	WHBGfxShaderGroup* shader_group = nullptr;

@@ -4,10 +4,19 @@
         <link type="text/rcss" href="hello.rcss"/>
     </head>
     <body>
-        <div id="container">
-            <h1>Hello Wii U!</h1>
-            <p>This is a sample RmlUi document running on the Wii U.</p>
-            <button>Click Me!</button>
+        <div class="flex">
+        	<div>
+        		<h2>First column</h2>
+        		<p>Etiam libero lorem.</p>
+        	</div>
+        	<div>
+        		<h2>Second column</h2>
+        		<p>Ut volutpat, odio et facilisis molestie, lacus elit euismod enim.</p>
+        	</div>
+        	<div class="double-width">
+        		<h2>Third column</h2>
+        		<p>Lorem ipsum dolor sit amet.</p>
+        	</div>
         </div>
     </body>
 </rml>

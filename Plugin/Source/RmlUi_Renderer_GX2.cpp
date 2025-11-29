@@ -14,6 +14,7 @@
 #include <gx2/utils.h>
 #include <gx2/mem.h>
 #include <gx2/clear.h>
+#include <gx2/state.h>
 #include <gx2r/buffer.h>
 #include <memory/mappedmemory.h>
 #include <cstring>
@@ -36,6 +37,12 @@ RenderInterface_GX2::~RenderInterface_GX2() {
     if (projection_buffer.buffer) {
         GX2RDestroyBufferEx(&projection_buffer, GX2R_RESOURCE_BIND_NONE);
     }
+    for (auto& buffer : transform_buffer) {
+        if (buffer.buffer) {
+            GX2RDestroyBufferEx(&buffer, GX2R_RESOURCE_BIND_NONE);
+        }
+    }
+    transform_buffer.clear();
     if (default_texture) {
         ReleaseTexture(reinterpret_cast<Rml::TextureHandle>(default_texture));
         default_texture = nullptr;
@@ -111,10 +118,17 @@ void RenderInterface_GX2::BeginFrame() {
 		WHBGfxInitShaderAttribute(shader_group, "TexCoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
 		WHBGfxInitFetchShaderMappedMem(shader_group);
 		
-		// Initialize projection uniform buffer
-		GX2InitUniformBuffer(&projection_buffer, sizeof(float) * 16, 1);
-	}
+        size_t size;
+        uint32_t count;
 
+		size = sizeof(float) * 16;
+        count = 1;
+		GX2InitUniformBuffer(&projection_buffer, size, count);
+
+	}
+    
+    current_transform_buffer_index = 0;
+    
     // Initialize default texture
     if (!default_texture) {
         Rml::byte white_pixel[4] = { 255, 255, 255, 255 };
@@ -137,6 +151,14 @@ Rml::CompiledGeometryHandle RenderInterface_GX2::CompileGeometry(
 	Rml::Span<const int> indices) 
 {
 	GeometryData* geometry = new GeometryData();
+
+    if (!vertices.empty()) {
+        const Rml::Vertex& v = vertices[0];
+        /*WHBLogPrintf("CompileGeometry: V0 Pos(%.2f, %.2f) Color(%d,%d,%d,%d) UV(%.2f, %.2f)",
+            v.position.x, v.position.y,
+            v.colour.red, v.colour.green, v.colour.blue, v.colour.alpha,
+            v.tex_coord.x, v.tex_coord.y);*/
+    }
 	
 	// Allocate GX2 vertex buffer
 	uint32_t vtx_buffer_size = vertices.size() * sizeof(Rml::Vertex);
@@ -190,8 +212,33 @@ void RenderInterface_GX2::RenderGeometry(
 	
 	GeometryData* data = reinterpret_cast<GeometryData*>(geometry);
 	
-	// TODO: Apply translation (via vertex shader uniform or push constant)
-	// For now, translation is not applied
+    // Combine translation and transform into a single matrix
+    // Combine translation and transform into a single matrix
+    if (shader_group) {
+        // Ensure we have a buffer for this draw call
+        if (current_transform_buffer_index >= transform_buffer.size()) {
+            GX2RBuffer new_buffer = {};
+            GX2InitUniformBuffer(&new_buffer, sizeof(float) * 16, 1);
+            transform_buffer.push_back(new_buffer);
+        }
+
+        GX2RBuffer* current_buffer = &transform_buffer[current_transform_buffer_index];
+
+        // Create translation matrix (column-major: translation goes in column 3)
+        Rml::Matrix4f translation_matrix = Rml::Matrix4f::Identity();
+        translation_matrix[3][0] = translation.x;
+        translation_matrix[3][1] = translation.y;
+        
+        // Combine: first translate, then apply transform
+        // Note: matrix multiplication order for column-major is reversed
+        Rml::Matrix4f combined = transform_matrix * translation_matrix;
+        
+        // Send combined matrix to shader
+        GX2RSetVertexUniformBlockEx(shader_group, current_buffer, 
+            (void*)combined.data(), sizeof(float) * 16, "TransformBlock");
+            
+        current_transform_buffer_index++;
+    }
 	
 	// Set vertex attributes
 	GX2SetAttribBuffer(0, data->num_vertices * sizeof(Rml::Vertex), sizeof(Rml::Vertex), data->vertex_buffer);
@@ -359,13 +406,11 @@ void RenderInterface_GX2::RenderToClipMask(
 void RenderInterface_GX2::SetTransform(const Rml::Matrix4f* transform) {
 	transform_enabled = (transform != nullptr);
 	
-	// TODO: Apply transform matrix to vertex shader uniform
-	// RmlUi::Matrix4f is column-major by default (unless RMLUI_MATRIX_ROW_MAJOR is defined)
-	// if (transform_enabled) {
-	//     GX2SetVertexUniformReg(uniform_location, 16, transform->data());
-	// } else {
-	//     // Use identity matrix
-	// }
+    if (transform) {
+        transform_matrix = *transform;
+    } else {
+        transform_matrix = Rml::Matrix4f::Identity();
+    }
 }
 
 RenderInterface_GX2::TextureData* RenderInterface_GX2::GetTextureData(Rml::TextureHandle texture_handle) {

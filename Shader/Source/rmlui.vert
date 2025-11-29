@@ -12,8 +12,14 @@ layout(binding = 0) uniform ProjectionBlock
     mat4 Transform;
 };
 
+layout(binding = 1) uniform TransformBlock
+{
+    mat4 TransformMatrix;
+};
+
 void main() {
-    gl_Position = Transform * vec4(Position, 0.0, 1.0);
+    // TransformMatrix includes both translation and transform
+    gl_Position = Transform * TransformMatrix * vec4(Position, 0.0, 1.0);
     fragColor = Color;
     fragTexCoord = TexCoord;
 }
