@@ -2,7 +2,7 @@
 
 #include <RmlUi/Core.h>
 #include "RmlUi/Core/Context.h"
-#include "RmlUi_File_WiiU.h"
+#include "Backend/RmlUi_File_WiiU.h"
 
 class RmlSystem
 {

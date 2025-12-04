@@ -1,4 +1,4 @@
-#include "Plugin/App.hpp"
+#include "App.hpp"
 #include "DrawSystem.hpp"
 #include "RmlSystem.hpp"
 #include <whb/log.h>

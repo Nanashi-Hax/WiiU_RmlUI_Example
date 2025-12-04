@@ -3,9 +3,9 @@
  * This combines the GX2 renderer and WiiU platform into a complete backend.
  */
 
-#include "RmlUi_Backend.h"
-#include "RmlUi_Platform_WiiU.h"
-#include "RmlUi_Renderer_GX2.h"
+#include "Backend/RmlUi_Backend.h"
+#include "Backend/RmlUi_Platform_WiiU.h"
+#include "Backend/RmlUi_Renderer_GX2.h"
 #include <RmlUi/Core/Context.h>
 
 // Wii U input headers

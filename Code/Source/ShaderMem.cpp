@@ -1,4 +1,4 @@
-#include "gfx_shader_mappedmem.h"
+#include "ShaderMem.h"
 
 // std
 #include <string.h>

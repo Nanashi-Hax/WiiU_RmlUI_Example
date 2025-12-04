@@ -1,5 +1,6 @@
 #pragma once
 #include <gx2/context.h>
+#include <gx2/display.h>
 
 class DrawSystem
 {
@@ -8,10 +9,15 @@ public:
     ~DrawSystem();
 
 private:
-    GX2ContextState* original;
-    GX2ContextState* plugin;
+    GX2ContextState* originalContext;
+    GX2ContextState* pluginContext;
+    bool isInitialized;
 
 public:
-    GX2ContextState* getOriginal();
-    GX2ContextState* getPlugin();
+    GX2ContextState* getOriginalContext();
+    GX2ContextState* getPluginContext();
+
+    void setOriginalContext(GX2ContextState* context);
+    void update(const GX2ColorBuffer *colorBuffer);
+    void initialize();
 };

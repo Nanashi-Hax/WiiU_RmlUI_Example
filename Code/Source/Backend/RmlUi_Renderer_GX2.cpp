@@ -3,7 +3,7 @@
  * Based on ImGui GX2 backend implementation
  */
 
-#include "RmlUi_Renderer_GX2.h"
+#include "Backend/RmlUi_Renderer_GX2.h"
 #include <RmlUi/Core.h>
 
 // GX2 includes
@@ -18,11 +18,11 @@
 #include <gx2r/buffer.h>
 #include <memory/mappedmemory.h>
 #include <cstring>
-#include "gfx_shader_mappedmem.h"
-#include "gx2_extra.hpp"
+#include "ShaderMem.h"
+#include "GX2Ex.hpp"
 
 // Include your shader data
-#include "rmlui_gsh.h"
+#include "RmlUi_gsh.h"
 
 RenderInterface_GX2::RenderInterface_GX2() {
 	// Shader group will be initialized in BeginFrame

@@ -1,4 +1,4 @@
-#include "Plugin/App.hpp"
+#include "App.hpp"
 
 static App app;
 

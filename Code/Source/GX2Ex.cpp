@@ -1,4 +1,4 @@
-#include "gx2_extra.hpp"
+#include "GX2Ex.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -10,7 +10,7 @@
 #include <gx2r/buffer.h>
 #include <whb/gfx.h>
 
-#include "gfx_shader_mappedmem.h"
+#include "ShaderMem.h"
 
 WHBGfxShaderGroup* WHBGfxCreateShaderGroup(unsigned char* shaderData)
 {

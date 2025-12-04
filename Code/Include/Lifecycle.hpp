@@ -1,4 +1,4 @@
 #pragma once
-#include "Plugin/App.hpp"
+#include "App.hpp"
 
 App& GetApp();

@@ -1,6 +1,6 @@
 #include "RmlSystem.hpp"
-#include "RmlUi_Backend.h"
-#include "RmlUi_File_WiiU.h"
+#include "Backend/RmlUi_Backend.h"
+#include "Backend/RmlUi_File_WiiU.h"
 #include <stdexcept>
 #include <format>
 #include <whb/log.h>
