@@ -22,7 +22,7 @@
 #include "GX2Ex.hpp"
 
 // Include your shader data
-#include "RmlUi_gsh.h"
+#include "rmlui_gsh.h"
 
 RenderInterface_GX2::RenderInterface_GX2() {
 	// Shader group will be initialized in BeginFrame

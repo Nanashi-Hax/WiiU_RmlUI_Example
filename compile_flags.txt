@@ -6,7 +6,7 @@
 -std=c++23
 
 -ICode/Include
--IShader/Build
+-IBuild
 
 -ID:/devkitPro/wut/include
 -ID:/devkitPro/wut/usr/include

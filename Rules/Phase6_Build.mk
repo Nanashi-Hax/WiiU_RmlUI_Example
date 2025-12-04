@@ -1,4 +1,4 @@
-# Phase5_Build.mk
+# Phase7_Build.mk
 
 .PHONY:	all
 
@@ -14,11 +14,15 @@ $(OUTPUT).elf: $(OFILES)
 
 $(OFILES_SRC): $(HFILES_BIN)
 
-#-------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#-------------------------------------------------------------------------------
-%.bin.o	%_bin.h: %.bin
-#-------------------------------------------------------------------------------
+$(BUILD)/%_bin.o $(BUILD)/%_bin.h: %.bin
+	@echo $(notdir $<)
+	@$(bin2o)
+
+$(BUILD)/%_rml.o $(BUILD)/%_rml.h: %.rml
+	@echo $(notdir $<)
+	@$(bin2o)
+
+$(BUILD)/%_rcss.o $(BUILD)/%_rcss.h: %.rcss
 	@echo $(notdir $<)
 	@$(bin2o)
 

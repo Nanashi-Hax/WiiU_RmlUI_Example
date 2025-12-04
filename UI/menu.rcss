@@ -1,0 +1,42 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a; /* 黒に近い背景 */
+    font-family: Lato;
+    color: white;
+}
+
+#menu {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+h1 {
+    font-size: 48px;
+    margin-bottom: 40px;
+    color: #eaeaea;
+}
+
+button {
+    width: 260px;
+    height: 50px;
+    font-size: 24px;
+    border-radius: 8px;
+    border-width: 2px;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #60a5fa;
+}
+
+button:active {
+    background: #2563eb;
+}

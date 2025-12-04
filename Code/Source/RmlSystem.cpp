@@ -34,7 +34,7 @@ RmlSystem::RmlSystem(int width, int height) : context(nullptr), initialized(fals
         throw std::runtime_error(msg);
     }
 
-    std::string docPath = "fs:/vol/external01/wiiu/plugins/RmlUI/demo.rml";
+    std::string docPath = "fs:/vol/external01/wiiu/plugins/RmlUI/menu.rml";
     Rml::ElementDocument* document = context->LoadDocument(docPath);
     if (document)
     {

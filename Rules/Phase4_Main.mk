@@ -1,11 +1,11 @@
-# Phase4_Main.mk
+# Phase5_Main.mk
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 
-include $(TOPDIR)/Rules/Phase5-0_Prepare.mk
+include $(TOPDIR)/Rules/Phase5_Prepare.mk
 
 else
 
-include $(TOPDIR)/Rules/Phase5-1_Build.mk
+include $(TOPDIR)/Rules/Phase6_Build.mk
 
 endif

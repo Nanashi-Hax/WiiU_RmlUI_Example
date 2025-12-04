@@ -1,4 +1,4 @@
-# Phase4_Prepare.mk
+# Phase6_Prepare.mk
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 export TOPDIR	:=	$(CURDIR)
@@ -26,10 +26,10 @@ else
 endif
 #-------------------------------------------------------------------------------
 
-export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
-export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-export OFILES 	:=	$(OFILES_BIN) $(OFILES_SRC) $(SHADER_OBJ)
-export HFILES_BIN	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
+export OFILES_BIN := $(addprefix $(BUILD)/,$(addsuffix .o,$(subst .,_,$(BINFILES))))
+export OFILES_SRC := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES := $(OFILES_BIN) $(OFILES_SRC) $(SHADER_OBJ)
+export HFILES_BIN := $(addprefix $(BUILD)/,$(addsuffix .h,$(subst .,_,$(BINFILES))))
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
