@@ -7,9 +7,9 @@ include $(TOPDIR)/Rules/Phase1_Setup.mk
 
 TARGET		:=	RmlUI_Example
 BUILD		:=	Build
-SOURCES		:=	Plugin/Source
+SOURCES		:=	Code/Source
 DATA		:=	Data
-INCLUDES	:=	Plugin/Include Shader/Build
+INCLUDES	:=	Code/Include Shader/Build
 SHADERS		:=	rmlui
 
 include $(TOPDIR)/Rules/Phase2_Config.mk

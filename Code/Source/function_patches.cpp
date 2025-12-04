@@ -16,95 +16,61 @@
 #include <RmlUi/Core.h>
 #include "RmlUi_Backend.h"
 
-// External context from main.cpp
-extern Rml::Context* g_RmlContext;
-extern bool g_RmlInitialized;
-extern GX2ContextState* gOverlayContextState;
+#include "Draw.hpp"
+#include "Plugin/lifecycle.hpp"
 
 namespace
-{
-    GX2ContextState* gOriginalContextState = nullptr;
+{    
     bool gOverlayContextInitialized = false;
-    bool gFirstCopyCall = false;
 }
 
-// GX2SetContextState Hook
-DECL_FUNCTION(void, GX2SetContextState, GX2ContextState *curContext)
+DECL_FUNCTION(void, GX2SetContextState, GX2ContextState *context)
 {
-    static bool first_call = true;
-    if (first_call) {
-        WHBLogPrintf("GX2SetContextState hook called for first time");
-        first_call = false;
-    }
-    real_GX2SetContextState(curContext);
-    gOriginalContextState = curContext;
+    real_GX2SetContextState(context);
+    UpdateOriginalContext(context);
 }
 
-// GX2SetupContextStateEx Hook
-DECL_FUNCTION(void, GX2SetupContextStateEx, GX2ContextState *state, BOOL unk1)
+DECL_FUNCTION(void, GX2SetupContextStateEx, GX2ContextState *context, BOOL unk1)
 {
-    static bool first_call = true;
-    if (first_call) {
-        WHBLogPrintf("GX2SetupContextStateEx hook called for first time");
-        first_call = false;
-    }
-    real_GX2SetupContextStateEx(state, unk1);
-    gOriginalContextState = state;
+    real_GX2SetupContextStateEx(context, unk1);
+    UpdateOriginalContext(context);
 }
 
-static void InitOverlayContext() {
-    if (gOverlayContextState && !gOverlayContextInitialized) {
+static void InitOverlayContext()
+{
+    if (GetApp().getDrawSystem()->getPlugin() && !gOverlayContextInitialized)
+    {
         // Initialize the context state
-        real_GX2SetupContextStateEx(gOverlayContextState, GX2_TRUE);
+        real_GX2SetupContextStateEx(GetApp().getDrawSystem()->getPlugin(), GX2_TRUE);
         
         // Invalidate cache to ensure GPU sees the data
-        DCInvalidateRange(gOverlayContextState, sizeof(GX2ContextState));
+        DCInvalidateRange(GetApp().getDrawSystem()->getPlugin(), sizeof(GX2ContextState));
         
         gOverlayContextInitialized = true;
     }
 }
 
 DECL_FUNCTION(void, GX2CopyColorBufferToScanBuffer, const GX2ColorBuffer *colorBuffer, GX2ScanTarget scan_target) {
-    if (!gFirstCopyCall) {
-        gFirstCopyCall = true;
-    }
     
     // Draw our overlay before the copy happens
-    if (g_RmlInitialized && g_RmlContext) {
+    if (GetApp().getRmlSystem()->isInitialized() && GetApp().getRmlSystem()->getContext()) {
         // Initialize overlay context on first call
         if (!gOverlayContextInitialized) {
             InitOverlayContext();
         }
 
         // Set our overlay context
-        real_GX2SetContextState(gOverlayContextState);
+        real_GX2SetContextState(GetApp().getDrawSystem()->getPlugin());
 
-        GX2SetDefaultState();
-
-        // Setup render target
-        GX2SetColorBuffer(colorBuffer, GX2_RENDER_TARGET_0);
-        GX2SetViewport(0.0f, 0.0f, colorBuffer->surface.width, colorBuffer->surface.height, 0.0f, 1.0f);
-        GX2SetScissor(0, 0, colorBuffer->surface.width, colorBuffer->surface.height);
-
-        // Setup blending/depth for overlay
-        GX2SetDepthOnlyControl(GX2_FALSE, GX2_FALSE, GX2_COMPARE_FUNC_NEVER);
-        GX2SetColorControl(GX2_LOGIC_OP_COPY, GX2_ENABLE, GX2_DISABLE, GX2_ENABLE);
-        // Enable alpha blending
-        GX2SetBlendControl(GX2_RENDER_TARGET_0, 
-                           GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD,
-                           TRUE,
-                           GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
+        SetDrawSettings(colorBuffer);
 
         // Render RmlUi
-        Backend::BeginFrame();
-        g_RmlContext->Update();
-        g_RmlContext->Render();
-        Backend::PresentFrame();
+        GetApp().getRmlSystem()->draw();
 
         GX2Flush();
 
         // Restore original context
-        real_GX2SetContextState(gOriginalContextState);
+        real_GX2SetContextState(GetApp().getDrawSystem()->getOriginal());
     }
     
     real_GX2CopyColorBufferToScanBuffer(colorBuffer, scan_target);
@@ -140,13 +106,13 @@ DECL_FUNCTION(int32_t, VPADRead, VPADChan chan, VPADStatus* buffers, uint32_t co
     VPADReadError real_error;
     int32_t result = real_VPADRead(chan, buffers, count, &real_error);
 
-    if (result > 0 && real_error == VPAD_READ_SUCCESS && g_RmlInitialized && g_RmlContext)
+    if (result > 0 && real_error == VPAD_READ_SUCCESS && GetApp().getRmlSystem()->isInitialized() && GetApp().getRmlSystem()->getContext())
     {
         // Feed input to RmlUi
-        bool consumed = !Backend::ProcessEvents(g_RmlContext, nullptr, false); 
+        bool consumed = !Backend::ProcessEvents(GetApp().getRmlSystem()->getContext(), nullptr, false); 
         (void)consumed; 
         
-        g_RmlContext->Update();
+        GetApp().getRmlSystem()->getContext()->Update();
     }
 
     if (error)
