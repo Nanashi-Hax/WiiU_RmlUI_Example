@@ -18,11 +18,11 @@
 #include <gx2r/buffer.h>
 #include <memory/mappedmemory.h>
 #include <cstring>
-#include "ShaderMem.h"
+#include "ShaderMem.hpp"
 #include "GX2Ex.hpp"
 
 // Include your shader data
-#include "Shader/default.h"
+#include "Shader/Default.h"
 
 RenderInterface_GX2::RenderInterface_GX2() {
 	// Shader group will be initialized in BeginFrame
@@ -111,7 +111,7 @@ void RenderInterface_GX2::BeginFrame() {
 	// Initialize shaders on first frame
 	if (!shader_group) {
 		shader_group = new WHBGfxShaderGroup();
-		WHBGfxLoadGFDShaderGroupMappedMem(shader_group, 0, default_gsh);
+		WHBGfxLoadGFDShaderGroupMappedMem(shader_group, 0, Default_gsh);
 		
 		WHBGfxInitShaderAttribute(shader_group, "Position", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32);
 		WHBGfxInitShaderAttribute(shader_group, "Color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);

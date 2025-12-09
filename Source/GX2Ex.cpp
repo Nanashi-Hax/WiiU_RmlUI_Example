@@ -10,7 +10,7 @@
 #include <gx2r/buffer.h>
 #include <whb/gfx.h>
 
-#include "ShaderMem.h"
+#include "ShaderMem.hpp"
 
 WHBGfxShaderGroup* WHBGfxCreateShaderGroup(unsigned char* shaderData)
 {

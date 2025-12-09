@@ -5,8 +5,8 @@
 -Wno-deprecated-builtins
 -std=c++23
 
--ICode/Include
--IBuild
+-IInclude
+-IBuild/Include
 
 -ID:/devkitPro/wut/include
 -ID:/devkitPro/wut/usr/include

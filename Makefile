@@ -30,17 +30,19 @@ Target := RmlUI_Example
 
 SourceDir := $(TopDir)/Source
 IncludeDir := $(TopDir)/Include
-UIDir := $(TopDir)/UI
-ShaderDir := $(TopDir)/Shader
-ToolDir := $(TopDir)/Tool
-MakefileDir := $(TopDir)/Mk
 BuildDir := $(TopDir)/Build
 DistDir := $(TopDir)/Dist
+
+ShaderDir := $(TopDir)/Shader
+UIDir := $(TopDir)/UI
+FontDir := $(TopDir)/Font
+
+ToolDir := $(TopDir)/Tool
 
 #-------------------------------------------------------------------------------
 # Macros
 #-------------------------------------------------------------------------------
-include $(MakefileDir)/Function.mk
+include $(TopDir)/Tools.mk
 
 #-------------------------------------------------------------------------------
 # Files
@@ -48,7 +50,7 @@ include $(MakefileDir)/Function.mk
 RmlDir := $(UIDir)/Document
 RcssDir := $(UIDir)/Style
 
-ShaderEntry := default
+ShaderEntry := Default
 GlslCompiler := $(ToolDir)/GLSLCompiler
 
 BuildTempDir := $(BuildDir)/Temp
@@ -59,10 +61,12 @@ BuildDependenceDir := $(BuildDir)/Dependence
 BuildGshFile := $(foreach entry,$(ShaderEntry),$(BuildTempDir)/$(entry).gsh)
 RmlFile := $(shell find $(RmlDir) -type f -name '*.rml')
 RcssFile := $(shell find $(RcssDir) -type f -name '*.rcss')
+FontFile := $(shell find $(FontDir) -type f -name '*.ttf')
 
 BuildGshBase := $(foreach entry,$(ShaderEntry),$(basename $(notdir $(entry))))
 RmlBase := $(foreach entry,$(RmlFile),$(basename $(notdir $(entry))))
 RcssBase := $(foreach entry,$(RcssFile),$(basename $(notdir $(entry))))
+FontBase := $(foreach entry,$(FontFile),$(basename $(notdir $(entry))))
 
 BuildIncludeShaderFile := $(foreach entry,$(BuildGshBase),$(BuildIncludeDir)/Shader/$(entry).h)
 BuildObjectShaderFile := $(foreach entry,$(BuildGshBase),$(BuildObjectDir)/Shader/$(entry).o)
@@ -73,8 +77,11 @@ BuildObjectRmlFile := $(foreach entry,$(RmlBase),$(BuildObjectDir)/UI/Document/$
 BuildIncludeRcssFile := $(foreach entry,$(RcssBase),$(BuildIncludeDir)/UI/Style/$(entry).h)
 BuildObjectRcssFile := $(foreach entry,$(RcssBase),$(BuildObjectDir)/UI/Style/$(entry).o)
 
-BuildIncludeBinaryFile := $(BuildIncludeShaderFile) $(BuildIncludeRmlFile) $(BuildIncludeRcssFile)
-BuildObjectBinaryFile := $(BuildObjectShaderFile) $(BuildObjectRmlFile) $(BuildObjectRcssFile)
+BuildIncludeFontFile := $(foreach entry,$(FontBase),$(BuildIncludeDir)/Font/$(entry).h)
+BuildObjectFontFile := $(foreach entry,$(FontBase),$(BuildObjectDir)/Font/$(entry).o)
+
+BuildIncludeBinaryFile := $(BuildIncludeShaderFile) $(BuildIncludeRmlFile) $(BuildIncludeRcssFile) $(BuildIncludeFontFile)
+BuildObjectBinaryFile := $(BuildObjectShaderFile) $(BuildObjectRmlFile) $(BuildObjectRcssFile) $(BuildObjectFontFile)
 
 CppFile := $(shell find $(SourceDir) -type f -name '*.cpp')
 CppRelative := $(shell realpath --relative-to=$(SourceDir) $(CppFile))
@@ -84,6 +91,7 @@ BuildElfFile := $(BuildDir)/$(Target).elf
 DistWpsFile := $(DistDir)/$(Target).wps
 
 SendScript := $(TopDir)/SendPlugin.sh
+Logger := udplogserver
 
 #-------------------------------------------------------------------------------
 # Libraries
@@ -136,13 +144,17 @@ $(BuildIncludeDir)/UI/Style/%.h $(BuildObjectDir)/UI/Style/%.o: $(RcssDir)/%.rcs
 	@echo $(notdir $<)
 	$(call bin2o,$<,$(BuildIncludeDir)/UI/Style/$*.h,$(BuildObjectDir)/UI/Style/$*.o,$(BuildTempDir)/$*.s)
 
+$(BuildIncludeDir)/Font/%.h $(BuildObjectDir)/Font/%.o: $(FontDir)/%.ttf
+	@echo $(notdir $<)
+	$(call bin2o,$<,$(BuildIncludeDir)/Font/$*.h,$(BuildObjectDir)/Font/$*.o,$(BuildTempDir)/$*.s)
+
 $(BuildObjectDir)/Cpp/%.o: $(SourceDir)/%.cpp
 	@echo $(notdir $<)
 	$(call cpp2o,$<,$@,$(BuildDependenceDir)/$*.d,$(CppFlags))
 
 $(BuildDir)/%.elf: $(BuildObjectCppFile) $(BuildObjectBinaryFile)
 	@echo linking ... $(notdir $@)
-	@$(call o2elf,$^,$@,$(LinkerFlags),$(LibraryDirFlags),$(LibraryFlags))
+	@$(call o2elf,$^,$@,$(LinkerFlags),$(LibraryDirFlags),$(LibraryFlags),$(BuildDir)/$*.map)
 	@$(call elf2lst,$@,$(BuildDir)/$*.lst)
 
 $(DistDir)/%.wps: $(BuildDir)/%.elf
@@ -153,8 +165,9 @@ $(DistDir)/%.wps: $(BuildDir)/%.elf
 
 clean:
 	@echo clean ...
-	@rm -rf $(BuildDir)
+	@rm -rf $(BuildDir) $(DistDir)
 
 send: $(DistWpsFile)
 	@echo sending ... $(notdir $@)
 	@$(SendScript) $<
+	@$(Logger)

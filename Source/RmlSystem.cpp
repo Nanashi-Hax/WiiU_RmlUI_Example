@@ -1,6 +1,9 @@
 #include "RmlSystem.hpp"
 #include "Backend/RmlUi_Backend.h"
 #include "Backend/RmlUi_File_WiiU.h"
+#include "Font/NotoSansJP-Medium.h"
+#include "UI/Document/Main.h"
+#include "UI/Style/Main.h"
 #include <stdexcept>
 #include <format>
 #include <whb/log.h>
@@ -27,14 +30,19 @@ RmlSystem::RmlSystem(int width, int height) : context(nullptr), initialized(fals
         throw std::runtime_error("Rml::CreateContext failed");
     }
 
-    std::string fontPath = "fs:/vol/external01/wiiu/plugins/RmlUI/fonts/Lato-Regular.ttf";
+    std::string fontPath = "NotoSansJP-Medium.ttf";
+    fileInterface.addVirtual(fontPath, NotoSansJP_Medium_ttf, NotoSansJP_Medium_ttf_size);
     if (!Rml::LoadFontFace(fontPath))
     {
         std::string msg = std::format("Rml::LoadFontFace failed: {}", fontPath);
         throw std::runtime_error(msg);
     }
 
-    std::string docPath = "fs:/vol/external01/wiiu/plugins/RmlUI/menu.rml";
+    std::string docPath = "Main.rml";
+    fileInterface.addVirtual(docPath, Main_rml, Main_rml_size);
+
+    fileInterface.addVirtual("Main.rcss", Main_rcss, Main_rcss_size);
+
     Rml::ElementDocument* document = context->LoadDocument(docPath);
     if (document)
     {

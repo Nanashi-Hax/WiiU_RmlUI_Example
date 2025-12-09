@@ -49,9 +49,10 @@ endef
 # $3: linker flags
 # $4: library directory flags
 # $5: library link flags
+# $6: map file
 define o2elf
     @mkdir -p $(dir $2)
-    @$(Linker) $1 -o $2 $3 $4 $5 -Wl,-Map,a.map
+    @$(Linker) $1 -o $2 $3 $4 $5 -Wl,-Map,$6
 endef
 
 # elf2lst
@@ -69,10 +70,4 @@ define elf2wps
     @mkdir -p $(dir $2)
 	@elf2rpl $1 $2
 	@echo 'PL' | dd of=$2 bs=1 seek=9 count=2 conv=notrunc status=none
-endef
-
-# send
-# $1: target file
-define send
-    @./send.sh $1
 endef

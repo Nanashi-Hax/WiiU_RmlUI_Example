@@ -1,4 +1,4 @@
-#include "ShaderMem.h"
+#include "ShaderMem.hpp"
 
 // std
 #include <string.h>
@@ -18,8 +18,8 @@
 GX2PixelShader* WHBGfxLoadGFDPixelShaderMappedMem(uint32_t index, const void *file)
 {
    uint32_t headerSize, programSize;
-   GX2PixelShader *shader = NULL;
-   void *program = NULL;
+   GX2PixelShader *shader = nullptr;
+   void *program = nullptr;
 
    if (index >= GFDGetPixelShaderCount(file))
    {
@@ -79,10 +79,10 @@ error:
       MEMFreeToMappedMemory(shader);
    }
 
-   return NULL;
+   return nullptr;
 }
 
-BOOL WHBGfxFreePixelShaderMappedMem(GX2PixelShader *shader)
+bool WHBGfxFreePixelShaderMappedMem(GX2PixelShader *shader)
 {
    if (shader->program)
    {
@@ -90,14 +90,14 @@ BOOL WHBGfxFreePixelShaderMappedMem(GX2PixelShader *shader)
    }
 
    MEMFreeToMappedMemory(shader);
-   return TRUE;
+   return true;
 }
 
 GX2VertexShader* WHBGfxLoadGFDVertexShaderMappedMem(uint32_t index, const void *file)
 {
    uint32_t headerSize, programSize;
-   GX2VertexShader *shader = NULL;
-   void *program = NULL;
+   GX2VertexShader *shader = nullptr;
+   void *program = nullptr;
 
    if (index >= GFDGetVertexShaderCount(file))
    {
@@ -157,10 +157,10 @@ error:
       MEMFreeToMappedMemory(shader);
    }
 
-   return NULL;
+   return nullptr;
 }
 
-BOOL WHBGfxFreeVertexShaderMappedMem(GX2VertexShader *shader)
+bool WHBGfxFreeVertexShaderMappedMem(GX2VertexShader *shader)
 {
    if (shader->program)
    {
@@ -168,10 +168,10 @@ BOOL WHBGfxFreeVertexShaderMappedMem(GX2VertexShader *shader)
    }
 
    MEMFreeToMappedMemory(shader);
-   return TRUE;
+   return true;
 }
 
-BOOL WHBGfxLoadGFDShaderGroupMappedMem(WHBGfxShaderGroup *group, uint32_t index, const void *file)
+bool WHBGfxLoadGFDShaderGroupMappedMem(WHBGfxShaderGroup *group, uint32_t index, const void *file)
 {
    memset(group, 0, sizeof(WHBGfxShaderGroup));
    group->vertexShader = WHBGfxLoadGFDVertexShaderMappedMem(index, file);
@@ -181,13 +181,13 @@ BOOL WHBGfxLoadGFDShaderGroupMappedMem(WHBGfxShaderGroup *group, uint32_t index,
    {
       // A shader group requires at least a vertex shader and a pixel shader.
       WHBGfxFreeShaderGroupMappedMem(group);
-      return FALSE;
+      return false;
    }
 
-   return TRUE;
+   return true;
 }
 
-BOOL WHBGfxInitFetchShaderMappedMem(WHBGfxShaderGroup *group)
+bool WHBGfxInitFetchShaderMappedMem(WHBGfxShaderGroup *group)
 {
    uint32_t size =
    GX2CalcFetchShaderSizeEx
@@ -209,28 +209,28 @@ BOOL WHBGfxInitFetchShaderMappedMem(WHBGfxShaderGroup *group)
    );
 
    GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, group->fetchShaderProgram, size);
-   return TRUE;
+   return true;
 }
 
-BOOL WHBGfxFreeShaderGroupMappedMem(WHBGfxShaderGroup *group)
+bool WHBGfxFreeShaderGroupMappedMem(WHBGfxShaderGroup *group)
 {
    if (group->fetchShaderProgram)
    {
       MEMFreeToMappedMemory(group->fetchShaderProgram);
-      group->fetchShaderProgram = NULL;
+      group->fetchShaderProgram = nullptr;
    }
 
    if (group->pixelShader)
    {
       WHBGfxFreePixelShaderMappedMem(group->pixelShader);
-      group->pixelShader = NULL;
+      group->pixelShader = nullptr;
    }
 
    if (group->vertexShader)
    {
       WHBGfxFreeVertexShaderMappedMem(group->vertexShader);
-      group->vertexShader = NULL;
+      group->vertexShader = nullptr;
    }
 
-   return TRUE;
+   return true;
 }
