@@ -1,6 +1,1 @@
-.vscode/
-*.wps
-*.elf
-*.lst
 Build/
-Shader/Build/
