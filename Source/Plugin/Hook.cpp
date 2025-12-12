@@ -19,6 +19,7 @@ ON_APPLICATION_START()
 
 ON_APPLICATION_REQUESTS_EXIT()
 {
+    WHBLogPrintf("Application requests exit");
     GetApp().shutdown();
     WHBLogUdpDeinit();
 }

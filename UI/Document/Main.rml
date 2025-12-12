@@ -1,16 +1,13 @@
+<!-- Main.rml -->
 <rml>
-<head>
-    <title>Menu</title>
-    <link type="text/rcss" href="Main.rcss" />
-</head>
+    <head>
+        <title>Menu</title>
+        <link type="text/rcss" href="Main.rcss" />
+    </head>
 
-<body>
-    <div id="Main">
-        <h1>こんにちは WiiU</h1>
-
-        <button id="start">Start Game</button>
-        <button id="settings">Settings</button>
-        <button id="exit">Exit</button>
-    </div>
-</body>
+    <body data-model="ClockModel">
+        <div id="Main">
+            <h1>{{ hour }}:{{ minute }}:{{ second }}</h1>
+        </div>
+    </body>
 </rml>

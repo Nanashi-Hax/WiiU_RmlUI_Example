@@ -2,8 +2,11 @@
 #include "Backend/RmlUi_Backend.h"
 #include "Backend/RmlUi_File_WiiU.h"
 #include "Font/NotoSansJP-Medium.h"
+#include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/DataModelHandle.h>
 #include "UI/Document/Main.h"
 #include "UI/Style/Main.h"
+#include "ViewModel/Clock.hpp"
 #include <stdexcept>
 #include <format>
 #include <whb/log.h>
@@ -38,6 +41,11 @@ RmlSystem::RmlSystem(int width, int height) : context(nullptr), initialized(fals
         throw std::runtime_error(msg);
     }
 
+    auto clockConstructor = context->CreateDataModel("ClockModel");
+    clock = new ViewModel::Clock();
+    clock->bind(clockConstructor);
+    clockModel = clockConstructor.GetModelHandle();
+
     std::string docPath = "Main.rml";
     fileInterface.addVirtual(docPath, Main_rml, Main_rml_size);
 
@@ -60,6 +68,9 @@ RmlSystem::RmlSystem(int width, int height) : context(nullptr), initialized(fals
 RmlSystem::~RmlSystem()
 {   
     initialized = false;
+    
+    delete clock;
+
     Rml::Shutdown();
     Backend::Shutdown();
 }
@@ -70,6 +81,8 @@ void RmlSystem::draw()
     context->Update();
     context->Render();
     Backend::PresentFrame();
+
+    clock->update(clockModel);
 }
 
 Rml::Context* RmlSystem::getContext()

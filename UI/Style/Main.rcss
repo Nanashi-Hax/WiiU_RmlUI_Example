@@ -1,3 +1,4 @@
+/* Main.rcss */
 body {
     margin: 0;
     padding: 0;
@@ -20,23 +21,4 @@ h1 {
     font-size: 48px;
     margin-bottom: 40px;
     color: #eaeaea;
-}
-
-button {
-    width: 260px;
-    height: 50px;
-    font-size: 24px;
-    border-radius: 8px;
-    border-width: 2px;
-    background: #60f63bff;
-    color: white;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #60fa7aff;
-}
-
-button:active {
-    background: #cdeb25ff;
 }

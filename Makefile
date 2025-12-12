@@ -168,6 +168,6 @@ clean:
 	@rm -rf $(BuildDir) $(DistDir)
 
 send: $(DistWpsFile)
-	@echo sending ... $(notdir $@)
+	@echo sending ... $(notdir $<)
 	@$(SendScript) $<
 	@$(Logger)
