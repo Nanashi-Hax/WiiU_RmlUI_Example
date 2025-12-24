@@ -2,7 +2,7 @@
 
 #include "Graphics/UniformBuffer.hpp"
 
-class PixelUniformBuffer : UniformBuffer
+class PixelUniformBuffer : public UniformBuffer
 {
 public:
     explicit PixelUniformBuffer(uint32_t size);

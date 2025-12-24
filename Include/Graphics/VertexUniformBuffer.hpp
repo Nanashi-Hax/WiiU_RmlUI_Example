@@ -2,7 +2,7 @@
 
 #include "Graphics/UniformBuffer.hpp"
 
-class VertexUniformBuffer : UniformBuffer
+class VertexUniformBuffer : public UniformBuffer
 {
 public:
     explicit VertexUniformBuffer(uint32_t size);

@@ -1,12 +1,6 @@
-/*
- * RmlUi Wii U GX2 Renderer Implementation
- * Based on ImGui GX2 backend implementation
- */
-
 #include "Backend/RmlUi_Renderer_GX2.h"
 #include <RmlUi/Core.h>
 
-// GX2 includes
 #include <whb/gfx.h>
 #include <whb/log.h>
 #include <gx2/registers.h>
@@ -18,24 +12,16 @@
 #include <gx2r/buffer.h>
 #include <memory/mappedmemory.h>
 #include <cstring>
+#include "Graphics/UniformBuffer.hpp"
 #include "Graphics/VertexUniformBuffer.hpp"
 #include "RmlUi/Config/Config.h"
-#include "ShaderMem.hpp"
 
-// Include your shader data
 #include "Shader/Default.h"
 
-RenderInterface_GX2::RenderInterface_GX2() : projectionBuffer(sizeof(float) * 4 * 4) {}
+RenderInterface_GX2::RenderInterface_GX2() : projectionBuffer(sizeof(float) * 4 * 4), shader(Default_gsh) {}
 
 RenderInterface_GX2::~RenderInterface_GX2()
 {
-	if (shader_group)
-	{
-		WHBGfxFreeShaderGroupMappedMem(shader_group);
-		delete shader_group;
-		shader_group = nullptr;
-	}
-
     if (default_texture)
 	{
         ReleaseTexture(reinterpret_cast<Rml::TextureHandle>(default_texture));
@@ -71,16 +57,7 @@ void RenderInterface_GX2::SetupRenderState() {
 	// Setup viewport
 	GX2SetViewport(0, 0, (float)viewport_width, (float)viewport_height, 0.0f, 1.0f);
 	
-	// Set shaders
-	if (shader_group)
-	{
-		GX2SetFetchShader(&shader_group->fetchShader);
-		GX2SetVertexShader(shader_group->vertexShader);
-		GX2SetPixelShader(shader_group->pixelShader);
-		
-		// CRITICAL: Set shader mode to use uniform blocks
-		GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_BLOCK);
-	}
+	shader.set();
 	
 	// Setup orthographic projection matrix
 	// RmlUi uses top-left origin (0,0) to bottom-right (width, height)
@@ -97,26 +74,12 @@ void RenderInterface_GX2::SetupRenderState() {
 		{ (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
 	};
 	
-	if (shader_group)
-	{
-		projectionBuffer.set(shader_group, (void*)ortho_projection, "ProjectionBlock");
-	}
+	UniformBuffer* buffer = &projectionBuffer;
+	shader.setUniform(buffer, (void*)ortho_projection, "ProjectionBlock");
 }
 
 void RenderInterface_GX2::BeginFrame()
 {
-	// Initialize shaders on first frame
-	if (!shader_group)
-	{
-		shader_group = new WHBGfxShaderGroup();
-		WHBGfxLoadGFDShaderGroupMappedMem(shader_group, 0, Default_gsh);
-		
-		WHBGfxInitShaderAttribute(shader_group, "Position", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32);
-		WHBGfxInitShaderAttribute(shader_group, "Color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
-		WHBGfxInitShaderAttribute(shader_group, "TexCoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
-		WHBGfxInitFetchShaderMappedMem(shader_group);
-	}
-    
 	transformIndex = 0;
 
     // Initialize default texture
@@ -192,7 +155,6 @@ void RenderInterface_GX2::RenderGeometry
 )
 {
 	if (!geometry) return;
-	if (!shader_group) return;
 
 	GeometryData* data = reinterpret_cast<GeometryData*>(geometry);
 
@@ -207,7 +169,8 @@ void RenderInterface_GX2::RenderGeometry
     
     Rml::Matrix4f combined = transformMatrix * translationMatrix;
     
-    transformBuffers[transformIndex]->set(shader_group, (void*)combined.data(), "TransformBlock");
+	UniformBuffer* buffer = transformBuffers[transformIndex].get();
+	shader.setUniform(buffer, (void*)combined.data(), "TransformBlock");
 
 	transformIndex++;
 	

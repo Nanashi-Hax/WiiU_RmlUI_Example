@@ -1,5 +1,6 @@
 #include "Graphics/UniformBuffer.hpp"
 #include "GX2Ex.hpp"
+#include <whb/log.h>
 
 UniformBuffer::UniformBuffer(uint32_t size) : size(size)
 {
@@ -8,10 +9,7 @@ UniformBuffer::UniformBuffer(uint32_t size) : size(size)
 
 UniformBuffer::~UniformBuffer()
 {
-    if (buffer.flags)
-    {
-        GX2RDestroyBufferEx(&buffer, GX2R_RESOURCE_BIND_NONE);
-    }
+    GX2RDestroyBufferEx(&buffer, GX2R_RESOURCE_BIND_NONE);
 }
 
 UniformBuffer::UniformBuffer(UniformBuffer&& other) noexcept

@@ -7,6 +7,7 @@
 #ifndef RMLUI_BACKENDS_RENDERER_GX2_H
 #define RMLUI_BACKENDS_RENDERER_GX2_H
 
+#include "Graphics/Shader.hpp"
 #include "Graphics/VertexUniformBuffer.hpp"
 #include <RmlUi/Core/RenderInterface.h>
 #include <gx2/texture.h>
@@ -82,8 +83,7 @@ private:
     
     Rml::Matrix4f transformMatrix = Rml::Matrix4f::Identity();
 
-	// Shader group for rendering (similar to ImGui implementation)
-	WHBGfxShaderGroup* shader_group = nullptr;
+	Shader shader;
     
     // Default white texture for untextured geometry
     TextureData* default_texture = nullptr;

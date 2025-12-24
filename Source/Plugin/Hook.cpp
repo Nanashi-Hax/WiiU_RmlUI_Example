@@ -7,9 +7,15 @@
 #include <gx2/state.h>
 
 #include "DrawSystem.hpp"
+#include "Exception/Patch.hpp"
 #include "RmlSystem.hpp"
 #include "Backend/RmlUi_Backend.h"
 #include "lifecycle.hpp"
+
+INITIALIZE_PLUGIN()
+{
+    Exception::Patch::apply();
+}
 
 ON_APPLICATION_START()
 {
@@ -65,7 +71,7 @@ DECL_FUNCTION(int32_t, VPADRead, VPADChan chan, VPADStatus* buffers, uint32_t co
     if (result > 0 && real_error == VPAD_READ_SUCCESS && rmlSystem->isInitialized() && rmlSystem->getContext())
     {
         bool consumed = !Backend::ProcessEvents(rmlSystem->getContext(), nullptr, false); 
-        (void)consumed; 
+        (void)consumed;
         
         rmlSystem->getContext()->Update();
     }
