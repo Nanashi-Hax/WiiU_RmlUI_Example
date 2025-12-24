@@ -18,32 +18,26 @@
 #include <gx2r/buffer.h>
 #include <memory/mappedmemory.h>
 #include <cstring>
+#include "Graphics/VertexUniformBuffer.hpp"
+#include "RmlUi/Config/Config.h"
 #include "ShaderMem.hpp"
-#include "GX2Ex.hpp"
 
 // Include your shader data
 #include "Shader/Default.h"
 
-RenderInterface_GX2::RenderInterface_GX2() {
-	// Shader group will be initialized in BeginFrame
-}
+RenderInterface_GX2::RenderInterface_GX2() : projectionBuffer(sizeof(float) * 4 * 4) {}
 
-RenderInterface_GX2::~RenderInterface_GX2() {
-	if (shader_group) {
+RenderInterface_GX2::~RenderInterface_GX2()
+{
+	if (shader_group)
+	{
 		WHBGfxFreeShaderGroupMappedMem(shader_group);
 		delete shader_group;
 		shader_group = nullptr;
 	}
-    if (projection_buffer.buffer) {
-        GX2RDestroyBufferEx(&projection_buffer, GX2R_RESOURCE_BIND_NONE);
-    }
-    for (auto& buffer : transform_buffer) {
-        if (buffer.buffer) {
-            GX2RDestroyBufferEx(&buffer, GX2R_RESOURCE_BIND_NONE);
-        }
-    }
-    transform_buffer.clear();
-    if (default_texture) {
+
+    if (default_texture)
+	{
         ReleaseTexture(reinterpret_cast<Rml::TextureHandle>(default_texture));
         default_texture = nullptr;
     }
@@ -78,7 +72,8 @@ void RenderInterface_GX2::SetupRenderState() {
 	GX2SetViewport(0, 0, (float)viewport_width, (float)viewport_height, 0.0f, 1.0f);
 	
 	// Set shaders
-	if (shader_group) {
+	if (shader_group)
+	{
 		GX2SetFetchShader(&shader_group->fetchShader);
 		GX2SetVertexShader(shader_group->vertexShader);
 		GX2SetPixelShader(shader_group->pixelShader);
@@ -94,22 +89,25 @@ void RenderInterface_GX2::SetupRenderState() {
 	float T = 0.0f;
 	float B = (float)viewport_height;
 	
-	const float ortho_projection[4][4] = {
+	const float ortho_projection[4][4] =
+	{
 		{ 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
 		{ 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
 		{ 0.0f,         0.0f,        -1.0f,   0.0f },
 		{ (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
 	};
 	
-	// Use helper function to set uniform block (handles lock/unlock and endian swap)
-	if (projection_buffer.buffer && shader_group) {
-		GX2RSetVertexUniformBlockEx(shader_group, &projection_buffer, (void*)ortho_projection, sizeof(ortho_projection), "ProjectionBlock");
+	if (shader_group)
+	{
+		projectionBuffer.set(shader_group, (void*)ortho_projection, "ProjectionBlock");
 	}
 }
 
-void RenderInterface_GX2::BeginFrame() {
+void RenderInterface_GX2::BeginFrame()
+{
 	// Initialize shaders on first frame
-	if (!shader_group) {
+	if (!shader_group)
+	{
 		shader_group = new WHBGfxShaderGroup();
 		WHBGfxLoadGFDShaderGroupMappedMem(shader_group, 0, Default_gsh);
 		
@@ -117,18 +115,10 @@ void RenderInterface_GX2::BeginFrame() {
 		WHBGfxInitShaderAttribute(shader_group, "Color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
 		WHBGfxInitShaderAttribute(shader_group, "TexCoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
 		WHBGfxInitFetchShaderMappedMem(shader_group);
-		
-        size_t size;
-        uint32_t count;
-
-		size = sizeof(float) * 16;
-        count = 1;
-		GX2InitUniformBuffer(&projection_buffer, size, count);
-
 	}
     
-    current_transform_buffer_index = 0;
-    
+	transformIndex = 0;
+
     // Initialize default texture
     if (!default_texture) {
         Rml::byte white_pixel[4] = { 255, 255, 255, 255 };
@@ -152,8 +142,6 @@ Rml::CompiledGeometryHandle RenderInterface_GX2::CompileGeometry(
 {
 	GeometryData* geometry = new GeometryData();
 
-
-	
 	// Allocate GX2 vertex buffer
 	uint32_t vtx_buffer_size = vertices.size() * sizeof(Rml::Vertex);
 	geometry->vertex_buffer = MEMAllocFromMappedMemoryForGX2Ex(vtx_buffer_size, GX2_VERTEX_BUFFER_ALIGNMENT);
@@ -196,43 +184,32 @@ void RenderInterface_GX2::ReleaseGeometry(Rml::CompiledGeometryHandle geometry) 
 	delete data;
 }
 
-void RenderInterface_GX2::RenderGeometry(
+void RenderInterface_GX2::RenderGeometry
+(
 	Rml::CompiledGeometryHandle geometry, 
 	Rml::Vector2f translation, 
-	Rml::TextureHandle texture) 
+	Rml::TextureHandle texture
+)
 {
-	if (!geometry)
-		return;
-	
+	if (!geometry) return;
+	if (!shader_group) return;
+
 	GeometryData* data = reinterpret_cast<GeometryData*>(geometry);
-	
-    // Combine translation and transform into a single matrix
-    // Combine translation and transform into a single matrix
-    if (shader_group) {
-        // Ensure we have a buffer for this draw call
-        if ((size_t)current_transform_buffer_index >= transform_buffer.size()) {
-            GX2RBuffer new_buffer = {};
-            GX2InitUniformBuffer(&new_buffer, sizeof(float) * 16, 1);
-            transform_buffer.push_back(new_buffer);
-        }
 
-        GX2RBuffer* current_buffer = &transform_buffer[current_transform_buffer_index];
+	if(transformIndex >= transformBuffers.size())
+	{
+		transformBuffers.push_back(Rml::MakeUnique<VertexUniformBuffer>(sizeof(float) * 4 * 4));
+	}
 
-        // Create translation matrix (column-major: translation goes in column 3)
-        Rml::Matrix4f translation_matrix = Rml::Matrix4f::Identity();
-        translation_matrix[3][0] = translation.x;
-        translation_matrix[3][1] = translation.y;
-        
-        // Combine: first translate, then apply transform
-        // Note: matrix multiplication order for column-major is reversed
-        Rml::Matrix4f combined = transform_matrix * translation_matrix;
-        
-        // Send combined matrix to shader
-        GX2RSetVertexUniformBlockEx(shader_group, current_buffer, 
-            (void*)combined.data(), sizeof(float) * 16, "TransformBlock");
-            
-        current_transform_buffer_index++;
-    }
+    Rml::Matrix4f translationMatrix = Rml::Matrix4f::Identity();
+    translationMatrix[3][0] = translation.x;
+    translationMatrix[3][1] = translation.y;
+    
+    Rml::Matrix4f combined = transformMatrix * translationMatrix;
+    
+    transformBuffers[transformIndex]->set(shader_group, (void*)combined.data(), "TransformBlock");
+
+	transformIndex++;
 	
 	// Set vertex attributes
 	GX2SetAttribBuffer(0, data->num_vertices * sizeof(Rml::Vertex), sizeof(Rml::Vertex), data->vertex_buffer);
@@ -505,9 +482,9 @@ void RenderInterface_GX2::SetTransform(const Rml::Matrix4f* transform) {
 	transform_enabled = (transform != nullptr);
 	
     if (transform) {
-        transform_matrix = *transform;
+        transformMatrix = *transform;
     } else {
-        transform_matrix = Rml::Matrix4f::Identity();
+        transformMatrix = Rml::Matrix4f::Identity();
     }
 }
 

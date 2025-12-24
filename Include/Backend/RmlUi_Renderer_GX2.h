@@ -7,11 +7,14 @@
 #ifndef RMLUI_BACKENDS_RENDERER_GX2_H
 #define RMLUI_BACKENDS_RENDERER_GX2_H
 
+#include "Graphics/VertexUniformBuffer.hpp"
 #include <RmlUi/Core/RenderInterface.h>
 #include <gx2/texture.h>
 #include <gx2/sampler.h>
 #include <whb/gfx.h>
 #include <cstdint>
+
+#include <memory>
 
 class RenderInterface_GX2 : public Rml::RenderInterface {
 public:
@@ -73,11 +76,11 @@ private:
 	int viewport_height = 720;
 	bool scissor_enabled = false;
 	bool transform_enabled = false;
-    GX2RBuffer projection_buffer = {};
-    Rml::Vector<GX2RBuffer> transform_buffer = {};
-    int current_transform_buffer_index = 0;
+    VertexUniformBuffer projectionBuffer;
+    Rml::Vector<Rml::UniquePtr<VertexUniformBuffer>> transformBuffers = {};
+	uint32_t transformIndex;
     
-    Rml::Matrix4f transform_matrix = Rml::Matrix4f::Identity();
+    Rml::Matrix4f transformMatrix = Rml::Matrix4f::Identity();
 
 	// Shader group for rendering (similar to ImGui implementation)
 	WHBGfxShaderGroup* shader_group = nullptr;

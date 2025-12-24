@@ -14,7 +14,6 @@
 ON_APPLICATION_START()
 {
     WHBLogUdpInit();
-    GetApp().initialize();
 }
 
 ON_APPLICATION_REQUESTS_EXIT()
@@ -33,6 +32,7 @@ DECL_FUNCTION(void, GX2SetContextState, GX2ContextState *context)
 DECL_FUNCTION(void, GX2Init, uint32_t attributes)
 {
     real_GX2Init(attributes);
+    GetApp().initialize();
     GetApp().getDrawSystem()->initialize();
 }
 
