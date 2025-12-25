@@ -31,3 +31,5 @@ void GX2RSetVertexUniformBlockEx(WHBGfxShaderGroup* shaderGroup, GX2RBuffer* buf
 
 // Set pixel uniform block with data (includes lock/unlock and endian swap)
 void GX2RSetPixelUniformBlockEx(WHBGfxShaderGroup* shaderGroup, GX2RBuffer* buffer, void* data, size_t size, std::string name);
+
+GX2ColorBuffer* CreateGX2ColorBuffer(int width, int height);

@@ -1,4 +1,5 @@
 #include "DrawSystem.hpp"
+#include "gx2/enum.h"
 #include <stdexcept>
 #include <memory/mappedmemory.h>
 #include <gx2/display.h>
@@ -42,15 +43,16 @@ void DrawSystem::update(const GX2ColorBuffer *colorBuffer)
     GX2SetViewport(0.0f, 0.0f, colorBuffer->surface.width, colorBuffer->surface.height, 0.0f, 1.0f);
     GX2SetScissor(0, 0, colorBuffer->surface.width, colorBuffer->surface.height);
     GX2SetDepthOnlyControl(GX2_FALSE, GX2_FALSE, GX2_COMPARE_FUNC_NEVER);
+    GX2SetAlphaTest(GX2_TRUE, GX2_COMPARE_FUNC_GREATER, 0.0f);
     GX2SetColorControl(GX2_LOGIC_OP_COPY, GX2_ENABLE, GX2_DISABLE, GX2_ENABLE);
     GX2SetBlendControl
     (
         GX2_RENDER_TARGET_0,
-        GX2_BLEND_MODE_SRC_ALPHA,
+        GX2_BLEND_MODE_ONE,
         GX2_BLEND_MODE_INV_SRC_ALPHA,
         GX2_BLEND_COMBINE_MODE_ADD,
         TRUE,
-        GX2_BLEND_MODE_SRC_ALPHA,
+        GX2_BLEND_MODE_ONE,
         GX2_BLEND_MODE_INV_SRC_ALPHA,
         GX2_BLEND_COMBINE_MODE_ADD
     );

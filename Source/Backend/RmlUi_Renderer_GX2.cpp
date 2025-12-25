@@ -17,8 +17,9 @@
 #include "RmlUi/Config/Config.h"
 
 #include "Shader/Default.h"
+#include "gx2/enum.h"
 
-RenderInterface_GX2::RenderInterface_GX2() : projectionBuffer(sizeof(float) * 4 * 4), shader(Default_gsh) {}
+RenderInterface_GX2::RenderInterface_GX2(int width, int height) : width(width), height(height), projectionBuffer(sizeof(float) * 4 * 4), shader(Default_gsh) {}
 
 RenderInterface_GX2::~RenderInterface_GX2()
 {
@@ -29,18 +30,11 @@ RenderInterface_GX2::~RenderInterface_GX2()
     }
 }
 
-void RenderInterface_GX2::SetViewport(int width, int height) {
-	viewport_width = width;
-	viewport_height = height;
-	
-	// Viewport will be set in SetupRenderState()
-}
-
 void RenderInterface_GX2::SetupRenderState() {
 	// Based on ImGui implementation
 	// Setup render state: alpha-blending enabled, no face culling, no depth testing
-	GX2SetColorControl(GX2_LOGIC_OP_COPY, 0xFF, FALSE, TRUE);
-	
+	GX2SetAlphaTest(GX2_TRUE, GX2_COMPARE_FUNC_GREATER, 0.0f);
+	GX2SetColorControl(GX2_LOGIC_OP_COPY, GX2_ENABLE, FALSE, TRUE);
 	// Premultiplied alpha blending (GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
 	GX2SetBlendControl(GX2_RENDER_TARGET_0,
 		GX2_BLEND_MODE_ONE,                    // src color
@@ -55,16 +49,16 @@ void RenderInterface_GX2::SetupRenderState() {
 	GX2SetDepthOnlyControl(FALSE, FALSE, GX2_COMPARE_FUNC_NEVER);
 	
 	// Setup viewport
-	GX2SetViewport(0, 0, (float)viewport_width, (float)viewport_height, 0.0f, 1.0f);
+	GX2SetViewport(0, 0, (float)width, (float)height, 0.0f, 1.0f);
 	
 	shader.set();
 	
 	// Setup orthographic projection matrix
 	// RmlUi uses top-left origin (0,0) to bottom-right (width, height)
 	float L = 0.0f;
-	float R = (float)viewport_width;
+	float R = (float)width;
 	float T = 0.0f;
-	float B = (float)viewport_height;
+	float B = (float)height;
 	
 	const float ortho_projection[4][4] =
 	{
@@ -96,7 +90,7 @@ void RenderInterface_GX2::EndFrame() {
 }
 
 void RenderInterface_GX2::Clear() {
-	GX2ClearColor(nullptr, 0.0f, 0.0f, 0.0f, 0.0f);
+	GX2ClearColor(nullptr, 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 Rml::CompiledGeometryHandle RenderInterface_GX2::CompileGeometry(
@@ -336,7 +330,7 @@ Rml::TextureHandle RenderInterface_GX2::GenerateTexture(
 	tex->surface.height = source_dimensions.y;
 	tex->surface.depth = 1;
 	tex->surface.mipLevels = 1;
-	tex->surface.format = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
+	tex->surface.format = GX2_SURFACE_FORMAT_UNORM_R10_G10_B10_A2;
 	tex->surface.aa = GX2_AA_MODE1X;
 	tex->surface.tileMode = GX2_TILE_MODE_LINEAR_ALIGNED;
 	tex->viewNumSlices = 1;
@@ -421,7 +415,7 @@ void RenderInterface_GX2::SetScissorRegion(Rml::Rectanglei region) {
 		GX2SetScissor(region.Left(), region.Top(), region.Width(), region.Height());
 	} else {
 		// Disable scissor by setting to full viewport
-		GX2SetScissor(0, 0, viewport_width, viewport_height);
+		GX2SetScissor(0, 0, width, height);
 	}
 }
 

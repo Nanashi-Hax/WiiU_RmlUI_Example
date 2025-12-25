@@ -27,11 +27,8 @@ public:
 		TextureData() : texture(nullptr), sampler(nullptr) {}
 	};
 
-	RenderInterface_GX2();
+	RenderInterface_GX2(int width, int height);
 	~RenderInterface_GX2();
-
-	// The viewport should be updated whenever the screen size changes.
-	void SetViewport(int viewport_width, int viewport_height);
 
 	// Sets up GX2 states for taking rendering commands from RmlUi.
 	void BeginFrame();
@@ -73,8 +70,8 @@ private:
 		                 num_vertices(0), num_indices(0) {}
 	};
 
-	int viewport_width = 1280;
-	int viewport_height = 720;
+	int width;
+	int height;
 	bool scissor_enabled = false;
 	bool transform_enabled = false;
     VertexUniformBuffer projectionBuffer;

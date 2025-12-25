@@ -8,6 +8,7 @@
 #include <gx2/mem.h>
 #include <gx2/shaders.h>
 #include <gx2r/buffer.h>
+#include <gx2r/surface.h>
 #include <whb/gfx.h>
 
 #include "ShaderMem.hpp"
@@ -112,4 +113,33 @@ void GX2RSetPixelUniformBlockEx(WHBGfxShaderGroup* shaderGroup, GX2RBuffer* buff
 
     int32_t location = GX2GetUniformBlockLocation(shaderGroup->pixelShader, name.c_str());
     GX2RSetPixelUniformBlock(const_cast<GX2RBuffer *>(buffer), location, 0);
+}
+
+GX2ColorBuffer* CreateGX2ColorBuffer(int width, int height)
+{
+    GX2ColorBuffer* colorBuffer = new GX2ColorBuffer();
+    memset(colorBuffer, 0, sizeof(GX2ColorBuffer));
+
+    colorBuffer->surface.dim = GX2_SURFACE_DIM_TEXTURE_2D;
+    colorBuffer->surface.use = GX2_SURFACE_USE_COLOR_BUFFER;
+    colorBuffer->surface.width = width;
+    colorBuffer->surface.height = height;
+    colorBuffer->surface.depth = 1;
+    colorBuffer->surface.mipLevels = 1;
+    colorBuffer->surface.format = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
+    colorBuffer->surface.aa = GX2_AA_MODE1X;
+    colorBuffer->surface.tileMode = GX2_TILE_MODE_LINEAR_ALIGNED;
+
+    GX2RCreateSurface
+    (
+        &colorBuffer->surface,
+        GX2R_RESOURCE_BIND_COLOR_BUFFER |
+        GX2R_RESOURCE_USAGE_GPU_WRITE |
+        GX2R_RESOURCE_USAGE_GPU_READ |
+        GX2R_RESOURCE_USAGE_CPU_WRITE |
+        GX2R_RESOURCE_USAGE_CPU_READ
+    );
+    GX2InitColorBufferRegs(colorBuffer);
+
+    return colorBuffer;
 }
