@@ -1,7 +1,7 @@
 # Makefile
 .SUFFIXES:
 .SECONDARY:
-.PHONY: all clean
+.PHONY: all clean send
 #-------------------------------------------------------------------------------
 # ToolChains
 #-------------------------------------------------------------------------------
@@ -20,7 +20,6 @@ Wut := $(DevKitPro)/wut
 Wums := $(DevKitPro)/wums
 
 MachineDependent := -DESPRESSO -mcpu=750 -meabi -mhard-float
-
 #-------------------------------------------------------------------------------
 # Directories
 #-------------------------------------------------------------------------------
@@ -35,7 +34,6 @@ DistDir := $(TopDir)/Dist
 
 ShaderDir := $(TopDir)/Shader
 UIDir := $(TopDir)/UI
-FontDir := $(TopDir)/Font
 
 ToolDir := $(TopDir)/Tool
 
@@ -61,12 +59,10 @@ BuildDependenceDir := $(BuildDir)/Dependence
 BuildGshFile := $(foreach entry,$(ShaderEntry),$(BuildTempDir)/$(entry).gsh)
 RmlFile := $(shell find $(RmlDir) -type f -name '*.rml')
 RcssFile := $(shell find $(RcssDir) -type f -name '*.rcss')
-FontFile := $(shell find $(FontDir) -type f -name '*.ttf')
 
 BuildGshBase := $(foreach entry,$(ShaderEntry),$(basename $(notdir $(entry))))
 RmlBase := $(foreach entry,$(RmlFile),$(basename $(notdir $(entry))))
 RcssBase := $(foreach entry,$(RcssFile),$(basename $(notdir $(entry))))
-FontBase := $(foreach entry,$(FontFile),$(basename $(notdir $(entry))))
 
 BuildIncludeShaderFile := $(foreach entry,$(BuildGshBase),$(BuildIncludeDir)/Shader/$(entry).h)
 BuildObjectShaderFile := $(foreach entry,$(BuildGshBase),$(BuildObjectDir)/Shader/$(entry).o)
@@ -77,11 +73,8 @@ BuildObjectRmlFile := $(foreach entry,$(RmlBase),$(BuildObjectDir)/UI/Document/$
 BuildIncludeRcssFile := $(foreach entry,$(RcssBase),$(BuildIncludeDir)/UI/Style/$(entry).h)
 BuildObjectRcssFile := $(foreach entry,$(RcssBase),$(BuildObjectDir)/UI/Style/$(entry).o)
 
-BuildIncludeFontFile := $(foreach entry,$(FontBase),$(BuildIncludeDir)/Font/$(entry).h)
-BuildObjectFontFile := $(foreach entry,$(FontBase),$(BuildObjectDir)/Font/$(entry).o)
-
-BuildIncludeBinaryFile := $(BuildIncludeShaderFile) $(BuildIncludeRmlFile) $(BuildIncludeRcssFile) $(BuildIncludeFontFile)
-BuildObjectBinaryFile := $(BuildObjectShaderFile) $(BuildObjectRmlFile) $(BuildObjectRcssFile) $(BuildObjectFontFile)
+BuildIncludeBinaryFile := $(BuildIncludeShaderFile) $(BuildIncludeRmlFile) $(BuildIncludeRcssFile)
+BuildObjectBinaryFile := $(BuildObjectShaderFile) $(BuildObjectRmlFile) $(BuildObjectRcssFile)
 
 CppFile := $(shell find $(SourceDir) -type f -name '*.cpp')
 CppRelative := $(shell realpath --relative-to=$(SourceDir) $(CppFile))
@@ -90,8 +83,9 @@ BuildObjectCppFile := $(patsubst %.cpp,$(BuildObjectDir)/Cpp/%.o,$(CppRelative))
 BuildElfFile := $(BuildDir)/$(Target).elf
 DistWpsFile := $(DistDir)/$(Target).wps
 
-SendScript := $(TopDir)/SendPlugin.sh
+SendPluginScript := $(TopDir)/SendPlugin.sh
 Logger := udplogserver
+
 
 #-------------------------------------------------------------------------------
 # Libraries
@@ -144,10 +138,6 @@ $(BuildIncludeDir)/UI/Style/%.h $(BuildObjectDir)/UI/Style/%.o: $(RcssDir)/%.rcs
 	@echo $(notdir $<)
 	$(call bin2o,$<,$(BuildIncludeDir)/UI/Style/$*.h,$(BuildObjectDir)/UI/Style/$*.o,$(BuildTempDir)/$*.s)
 
-$(BuildIncludeDir)/Font/%.h $(BuildObjectDir)/Font/%.o: $(FontDir)/%.ttf
-	@echo $(notdir $<)
-	$(call bin2o,$<,$(BuildIncludeDir)/Font/$*.h,$(BuildObjectDir)/Font/$*.o,$(BuildTempDir)/$*.s)
-
 $(BuildObjectDir)/Cpp/%.o: $(SourceDir)/%.cpp
 	@echo $(notdir $<)
 	$(call cpp2o,$<,$@,$(BuildDependenceDir)/$*.d,$(CppFlags))
@@ -169,5 +159,5 @@ clean:
 
 send: $(DistWpsFile)
 	@echo sending ... $(notdir $<)
-	@$(SendScript) $<
+	@$(SendPluginScript) $<
 	@$(Logger)

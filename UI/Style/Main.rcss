@@ -1,24 +1,37 @@
 /* Main.rcss */
 body {
-    margin: 0;
+    margin: auto;
     padding: 0;
+    width: 25%;
+    height: 75%;
     background: #1a1a1a; /* 黒に近い背景 */
-    font-family: Noto Sans JP;
+    font-family: "Noto Sans JP";
     color: white;
-}
-
-#Main {
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
+    justify-content: center; /* 並び方向の中央 */
+    align-items: center;     /* 直交方向の中央 */
+    gap: 40dp;
 }
 
-h1 {
-    font-size: 48px;
-    margin-bottom: 40px;
+label {
+    font-size: 48dp;
     color: #eaeaea;
+}
+
+button {
+    color: #eaeaea;
+    font-size: 48dp;
+    tab-index: auto;
+    nav: auto;
+}
+
+button:focus {
+    color: #88ff00;
+}
+
+#Buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20dp;
 }

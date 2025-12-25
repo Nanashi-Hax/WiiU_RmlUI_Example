@@ -1,7 +1,6 @@
 #include "RmlSystem.hpp"
 #include "Backend/RmlUi_Backend.h"
 #include "Backend/RmlUi_File_WiiU.h"
-#include "Font/NotoSansJP-Medium.h"
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/DataModelHandle.h>
 #include "UI/Document/Main.h"
@@ -33,8 +32,7 @@ RmlSystem::RmlSystem(int width, int height) : context(nullptr), initialized(fals
         throw std::runtime_error("Rml::CreateContext failed");
     }
 
-    std::string fontPath = "NotoSansJP-Medium.ttf";
-    fileInterface.addVirtual(fontPath, NotoSansJP_Medium_ttf, NotoSansJP_Medium_ttf_size);
+    std::string fontPath = "fs:/vol/external01/wiiu/fonts/NotoSansJP-Medium.ttf";
     if (!Rml::LoadFontFace(fontPath))
     {
         std::string msg = std::format("Rml::LoadFontFace failed: {}", fontPath);
@@ -61,6 +59,11 @@ RmlSystem::RmlSystem(int width, int height) : context(nullptr), initialized(fals
         std::string msg = std::format("Rml::Context::LoadDocument failed: {}", docPath);
         throw std::runtime_error(msg);
     }
+    auto* button0 = document->GetElementById("0003");
+    button0->Focus(true); // 起動時フォーカス
+
+    auto* focus = context->GetFocusElement();
+    Rml::Log::Message(Rml::Log::LT_INFO, "focus: %s", focus ? focus->GetId().c_str() : "null");
 
     initialized = true;
 }

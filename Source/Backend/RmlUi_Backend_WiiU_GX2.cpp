@@ -6,6 +6,9 @@
 #include "Backend/RmlUi_Backend.h"
 #include "Backend/RmlUi_Platform_WiiU.h"
 #include "Backend/RmlUi_Renderer_GX2.h"
+#include "InputSystem.hpp"
+#include "lifecycle.hpp"
+#include "whb/log.h"
 #include <RmlUi/Core/Context.h>
 
 // Wii U input headers
@@ -67,30 +70,31 @@ bool ProcessEvents(Rml::Context* context, KeyDownCallback key_down_callback, boo
 		return !request_exit;
 	
 	// Read VPAD (GamePad) input
-	VPADStatus vpad_status;
-	VPADReadError vpad_error;
-	VPADRead(VPAD_CHAN_0, &vpad_status, 1, &vpad_error);
+	App& app = GetApp();
+	InputSystem* inputSystem = app.getInputSystem();
+	std::vector<VPADStatus> list = inputSystem->consumeAll();
 	
-	if (vpad_error == VPAD_READ_SUCCESS) {
+	for(VPADStatus s : list)
+	{
 		// Process touch input
 		VPADTouchData touch;
-		VPADGetTPCalibratedPoint(VPAD_CHAN_0, &touch, &vpad_status.tpNormal);
+		VPADGetTPCalibratedPoint(VPAD_CHAN_0, &touch, &s.tpNormal);
 		
 		if (touch.touched) {
 			// Convert touch coordinates to screen coordinates
 			// GamePad touchscreen is 854x480, but we scale to context size
 			int ctx_width = context->GetDimensions().x;
 			int ctx_height = context->GetDimensions().y;
-			
+
 			float scale_x = (float)ctx_width / 1280.0f;
 			float scale_y = (float)ctx_height / 720.0f;
-			
+
 			int mouse_x = (int)(touch.x * scale_x);
 			int mouse_y = (int)(touch.y * scale_y);
-			
+
 			context->ProcessMouseMove(mouse_x, mouse_y, 0);
 		}
-		
+
 		// Handle touch press/release
 		if (touch.touched != was_touched) {
 			if (touch.touched) {
@@ -100,57 +104,59 @@ bool ProcessEvents(Rml::Context* context, KeyDownCallback key_down_callback, boo
 			}
 			was_touched = touch.touched;
 		}
-		
+
 		// Check for HOME button to exit
-		if (vpad_status.trigger & VPAD_BUTTON_HOME) {
+		if (s.trigger & VPAD_BUTTON_HOME) {
 			request_exit = true;
 		}
-		
+
 		// Process buttons as keyboard input (example)
-		if (vpad_status.trigger & VPAD_BUTTON_A) {
+		if (s.trigger & VPAD_BUTTON_A) {
 			context->ProcessKeyDown(Rml::Input::KI_RETURN, 0);
 			if (key_down_callback) {
 				key_down_callback(context, Rml::Input::KI_RETURN, 0, 1.0f, false);
 			}
 		}
-		if (vpad_status.release & VPAD_BUTTON_A) {
+		if (s.release & VPAD_BUTTON_A) {
 			context->ProcessKeyUp(Rml::Input::KI_RETURN, 0);
 		}
-		
+
 		// D-Pad navigation
-		if (vpad_status.trigger & VPAD_BUTTON_UP) {
+		if (s.trigger & VPAD_BUTTON_UP) {
+			WHBLogPrintf("Up");
 			context->ProcessKeyDown(Rml::Input::KI_UP, 0);
 		}
-		if (vpad_status.release & VPAD_BUTTON_UP) {
+		if (s.release & VPAD_BUTTON_UP) {
 			context->ProcessKeyUp(Rml::Input::KI_UP, 0);
 		}
-		
-		if (vpad_status.trigger & VPAD_BUTTON_DOWN) {
+
+		if (s.trigger & VPAD_BUTTON_DOWN) {
+			WHBLogPrintf("Down");
 			context->ProcessKeyDown(Rml::Input::KI_DOWN, 0);
 		}
-		if (vpad_status.release & VPAD_BUTTON_DOWN) {
+		if (s.release & VPAD_BUTTON_DOWN) {
 			context->ProcessKeyUp(Rml::Input::KI_DOWN, 0);
 		}
-		
-		if (vpad_status.trigger & VPAD_BUTTON_LEFT) {
+
+		if (s.trigger & VPAD_BUTTON_LEFT) {
 			context->ProcessKeyDown(Rml::Input::KI_LEFT, 0);
 		}
-		if (vpad_status.release & VPAD_BUTTON_LEFT) {
+		if (s.release & VPAD_BUTTON_LEFT) {
 			context->ProcessKeyUp(Rml::Input::KI_LEFT, 0);
 		}
-		
-		if (vpad_status.trigger & VPAD_BUTTON_RIGHT) {
+
+		if (s.trigger & VPAD_BUTTON_RIGHT) {
 			context->ProcessKeyDown(Rml::Input::KI_RIGHT, 0);
 		}
-		if (vpad_status.release & VPAD_BUTTON_RIGHT) {
+		if (s.release & VPAD_BUTTON_RIGHT) {
 			context->ProcessKeyUp(Rml::Input::KI_RIGHT, 0);
 		}
-		
+
 		// B button as ESC/Back
-		if (vpad_status.trigger & VPAD_BUTTON_B) {
+		if (s.trigger & VPAD_BUTTON_B) {
 			context->ProcessKeyDown(Rml::Input::KI_ESCAPE, 0);
 		}
-		if (vpad_status.release & VPAD_BUTTON_B) {
+		if (s.release & VPAD_BUTTON_B) {
 			context->ProcessKeyUp(Rml::Input::KI_ESCAPE, 0);
 		}
 	}

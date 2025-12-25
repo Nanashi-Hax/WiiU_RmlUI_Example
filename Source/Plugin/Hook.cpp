@@ -8,9 +8,11 @@
 
 #include "DrawSystem.hpp"
 #include "Exception/Patch.hpp"
+#include "InputSystem.hpp"
 #include "RmlSystem.hpp"
 #include "Backend/RmlUi_Backend.h"
 #include "lifecycle.hpp"
+#include "vpad/input.h"
 
 INITIALIZE_PLUGIN()
 {
@@ -64,12 +66,16 @@ DECL_FUNCTION(int32_t, VPADRead, VPADChan chan, VPADStatus* buffers, uint32_t co
 {
     App& app = GetApp();
     RmlSystem* rmlSystem = app.getRmlSystem();
+    InputSystem* inputSystem = app.getInputSystem();
 
     VPADReadError real_error;
     int32_t result = real_VPADRead(chan, buffers, count, &real_error);
 
     if (result > 0 && real_error == VPAD_READ_SUCCESS && rmlSystem->isInitialized() && rmlSystem->getContext())
     {
+        VPADStatus status = buffers[0];
+        inputSystem->push(status);
+
         bool consumed = !Backend::ProcessEvents(rmlSystem->getContext(), nullptr, false); 
         (void)consumed;
         
